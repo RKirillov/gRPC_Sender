@@ -33,18 +33,18 @@
 
             // Генерация случайного количества сущностей от 50 до 500
             int count = _random.Next(50, 50);
-            // Создание экземпляра AutoFaker для AdkuEntity
-            var faker = new AutoFaker<AdkuEntity>();
 
             // Создание экземпляра AutoFaker для AdkuEntity
-            // Генерация списка сущностей
-            var entities = faker.Generate(count).Select(entity =>
-            {
-                entity.Value = valueCounter++;
-                return entity;
-            }).ToList();
+            var faker = new AutoFaker<AdkuEntity>()
+                .RuleFor(entity => entity.RegisterType, f => f.PickRandom<RegisterType>())
+                .RuleFor(entity => entity.Value, f => valueCounter++)
+                .RuleFor(entity => entity.DateTime, f => DateTime.Now)
+                .RuleFor(entity => entity.DateTimeUTC, f => DateTime.UtcNow)
+                .RuleFor(entity => entity.TagName, f => f.Lorem.Word());
 
             // Генерация списка сущностей
+            var entities = faker.Generate(count);
+
             return entities;
         }
     }

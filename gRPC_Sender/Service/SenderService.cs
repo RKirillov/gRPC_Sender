@@ -7,7 +7,6 @@ namespace gRPC_Sender.Service
     using Microsoft.Extensions.Logging;
     using System.Threading.Tasks;
     using AutoMapper;
-    using Microsoft.AspNetCore.Hosting.Server;
 
     namespace gRPC_Sender.Service
     {

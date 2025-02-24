@@ -12,7 +12,7 @@
         /// <summary>
         /// Тип журнала
         /// </summary>
-        //public RegisterType RegisterType { get; set; }
+        public RegisterType RegisterType { get; set; }
 
         /// <summary>
         /// Значение
@@ -22,12 +22,12 @@
         /// <summary>
         /// Дата/время
         /// </summary>
-        //public DateTime DateTime { get; set; }
+        public DateTime DateTime { get; set; }
 
         /// <summary>
-        /// Дата/время записи в БД
+        /// Дата/время UTC
         /// </summary>
-        //public DateTime WriteDate { get; set; }
+        public DateTime DateTimeUTC { get; set; }
 
         /// <summary>
         /// Период

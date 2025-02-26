@@ -1,10 +1,14 @@
+using gRPC_Sender.Interceptor;
 using gRPC_Sender.Interceptor.gRPC_Sender.Service;
 using gRPC_Sender.Job;
 using gRPC_Sender.Mapper;
 using gRPC_Sender.Repository;
 using gRPC_Sender.Service;
 using gRPC_Sender.Service.gRPC_Sender.Service;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 using Quartz;
+using System.Text;
 
 namespace gRPC_Sender
 {
@@ -24,8 +28,30 @@ namespace gRPC_Sender
             builder.Services.AddGrpc(options =>
             {
                 options.Interceptors.Add<LoggingInterceptor>(); // Добавляем интерсептор
+                options.Interceptors.Add<AuthorizationInterceptor>();
             });
             builder.Services.AddGrpc();
+
+            var key = Encoding.ASCII.GetBytes("This is my test private keyThis is my test private key");
+            builder.Services.AddAuthentication(x =>
+            {
+                x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+                .AddJwtBearer(x =>
+                {
+                    x.RequireHttpsMetadata = false;
+                    x.SaveToken = true;
+                    x.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuerSigningKey = true,
+                        IssuerSigningKey = new SymmetricSecurityKey(key),
+                        ValidateIssuer = false,
+                        ValidateAudience = false
+                    };
+                });
+
+
             builder.Services.AddSingleton<IJob, EntityReaderJob>();
             // Настройка Quartz.NET
             builder.Services.AddQuartz(q =>
@@ -41,7 +67,14 @@ namespace gRPC_Sender
             builder.Services.AddQuartzHostedService(q => q.WaitForJobsToComplete = true);
 
             // Add services to the container.
-            builder.Services.AddAuthorization();
+            builder.Services.AddAuthorization(options =>
+            {
+                options.AddPolicy("GrpcAccessPolicy", policy =>
+                {
+                    policy.RequireAuthenticatedUser();  // Требуется аутентификация
+                    policy.RequireRole("Admin");         // Добавьте нужные требования, например, роль Admin
+                });
+            });
 
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
@@ -57,7 +90,9 @@ namespace gRPC_Sender
             }
 
             app.UseRouting();
+            app.UseAuthentication();
             app.UseAuthorization();
+
             app.UseEndpoints(endpoints =>
             {
                 // Регистрация вашего gRPC-сервиса

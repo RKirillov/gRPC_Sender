@@ -32,7 +32,7 @@
         {
 
             // Генерация случайного количества сущностей от 50 до 500
-            int count = _random.Next(50, 50);
+            int count = _random.Next(5000, 15000);
 
             // Создание экземпляра AutoFaker для AdkuEntity
             var faker = new AutoFaker<AdkuEntity>()

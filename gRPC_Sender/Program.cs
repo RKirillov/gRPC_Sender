@@ -54,14 +54,35 @@ namespace gRPC_Sender
 
             builder.Services.AddSingleton<IJob, EntityReaderJob>();
             // Настройка Quartz.NET
+            /*            builder.Services.AddQuartz(q =>
+                        {
+                            q.UseDefaultThreadPool(x=>x.MaxConcurrency=1);
+                            q.AddJob<EntityReaderJob>(opts => opts.WithIdentity("EntityReaderJob"));
+                            q.AddTrigger(opts => opts
+                                .ForJob("EntityReaderJob")
+                                .WithIdentity("EntityReaderTrigger")
+                                .WithCronSchedule("0 0/1 * * * ?")); // Запуск каждые 1 минут
+                        });*/
             builder.Services.AddQuartz(q =>
             {
-                q.UseDefaultThreadPool(x=>x.MaxConcurrency=1);
-                q.AddJob<EntityReaderJob>(opts => opts.WithIdentity("EntityReaderJob"));
+                // Настройка пула потоков с максимальной конкуренцией 1
+                q.UseDefaultThreadPool(tp =>
+                {
+                    tp.MaxConcurrency = 1;
+                });
+
+                // Определение и регистрация задачи (Job)
+                var jobKey = new JobKey("EntityReaderJob");
+                q.AddJob<EntityReaderJob>(opts => opts.WithIdentity(jobKey));
+
+                // Определение триггера, который запускает задачу каждые 10 секунд
                 q.AddTrigger(opts => opts
-                    .ForJob("EntityReaderJob")
+                    .ForJob(jobKey)
                     .WithIdentity("EntityReaderTrigger")
-                    .WithCronSchedule("0 0/1 * * * ?")); // Запуск каждые 1 минут
+                    .StartNow() // Немедленный старт
+                    .WithSimpleSchedule(x => x
+                        .WithIntervalInSeconds(10) // Интервал 10 секунд
+                        .RepeatForever())); // Бесконечное повторение
             });
 
             builder.Services.AddQuartzHostedService(q => q.WaitForJobsToComplete = true);

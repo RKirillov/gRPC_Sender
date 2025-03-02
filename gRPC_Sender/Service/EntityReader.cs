@@ -6,7 +6,7 @@
     using global::gRPC_Sender.Repository;
     using global::gRPC_Sender.Entity;
 
-    public class EntityReader
+    public class EntityReader: IEntityReader
     {
         private readonly IDataReader _dataReader;
         private readonly Channel<AdkuEntity> _channel;
@@ -47,6 +47,12 @@
             // _channel.Writer.Complete();
         }
 
-        public ChannelReader<AdkuEntity> GetReader() => _channel.Reader;
+        public  virtual ChannelReader<AdkuEntity> GetReader() => _channel.Reader;
+    }
+    //для тестирования
+    public interface IEntityReader
+    {
+        ChannelReader<AdkuEntity> GetReader();
+        Task StartReadingAsync(CancellationToken cancellationToken);
     }
 }

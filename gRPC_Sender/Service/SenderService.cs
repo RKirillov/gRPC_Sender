@@ -13,10 +13,10 @@ namespace gRPC_Sender.Service
         public class SenderService : GrpcServices.SenderService.SenderServiceBase
         {
             private readonly ILogger<SenderService> _logger;
-            private readonly EntityReader _entityReader;
+            private readonly IEntityReader _entityReader;
             private readonly IMapper _mapper;
 
-            public SenderService(ILogger<SenderService> logger, EntityReader entityReader, IMapper mapper)
+            public SenderService(ILogger<SenderService> logger, IEntityReader entityReader, IMapper mapper)
             {
                 _logger = logger;
                 _entityReader = entityReader;

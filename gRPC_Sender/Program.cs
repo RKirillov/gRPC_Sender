@@ -19,7 +19,7 @@ namespace gRPC_Sender
             var builder = WebApplication.CreateBuilder(args);
             builder.Services.AddAutoMapper(typeof(EntityMappingProfile));
             builder.Services.AddSingleton<IDataReader>(new DataReader("your_connection_string"));
-            builder.Services.AddSingleton<EntityReader>();
+            builder.Services.AddSingleton<IEntityReader,EntityReader>();
             builder.Services.AddSingleton<SenderService>();
             // Регистрация интерсептора
             builder.Services.AddSingleton<LoggingInterceptor>();

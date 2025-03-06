@@ -37,8 +37,9 @@ namespace gRPC_Sender.Service
                         {
                             var grpcEntity = _mapper.Map<Entity>(entity);
                             await responseStream.WriteAsync(grpcEntity);
-                            await _cacheService.SetAsync<AdkuEntity>("Redis", entity);
-                            var z = await _cacheService.GetAsync<AdkuEntity>("Redis");
+                            string key = $"Adku:{entity.TagName}:{entity.DateTimeUTC:yyyyMMddHHmmss}";
+                            await _cacheService.SetAsync<AdkuEntity>(key, entity);
+                            //var z = await _cacheService.GetAsync<AdkuEntity>("Redis");
                         }
                         catch (RpcException ex)
                         {

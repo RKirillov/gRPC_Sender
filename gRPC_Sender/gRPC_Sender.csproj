@@ -16,6 +16,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="6.0.36" />
+    <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="8.0.2" />
     <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.36.0" />
     <PackageReference Include="Quartz" Version="3.13.1" />
     <PackageReference Include="Quartz.Extensions.Hosting" Version="3.13.1" />

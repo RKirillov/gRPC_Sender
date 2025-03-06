@@ -7,9 +7,9 @@
     //Реализуйте класс, который будет выполнять метод StartReadingAsync из EntityReader.
     public class EntityReaderJob : IJob
     {
-        private readonly EntityReader _entityReader;
+        private readonly IEntityReader _entityReader;
 
-        public EntityReaderJob(EntityReader entityReader)
+        public EntityReaderJob(IEntityReader entityReader)
         {
             _entityReader = entityReader;
         }

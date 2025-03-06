@@ -7,6 +7,8 @@ namespace gRPC_Sender.Service
     using Microsoft.Extensions.Logging;
     using System.Threading.Tasks;
     using AutoMapper;
+    using global::gRPC_Sender.Redis;
+    using global::gRPC_Sender.Entity;
 
     namespace gRPC_Sender.Service
     {
@@ -14,12 +16,14 @@ namespace gRPC_Sender.Service
         {
             private readonly ILogger<SenderService> _logger;
             private readonly IEntityReader _entityReader;
+            private readonly ICacheService _cacheService;
             private readonly IMapper _mapper;
 
-            public SenderService(ILogger<SenderService> logger, IEntityReader entityReader, IMapper mapper)
+            public SenderService(ILogger<SenderService> logger, IEntityReader entityReader, IMapper mapper,ICacheService cacheService)
             {
                 _logger = logger;
                 _entityReader = entityReader;
+                _cacheService=cacheService;
                 _mapper = mapper;
             }
 /*            Server Streaming методы(как StreamEntities) обрабатываются через ServerStreamingServerHandler, что и нужно для вашей ситуации, поскольку сервер отправляет несколько сообщений в ответ на один запрос клиента.*/
@@ -33,9 +37,12 @@ namespace gRPC_Sender.Service
                         {
                             var grpcEntity = _mapper.Map<Entity>(entity);
                             await responseStream.WriteAsync(grpcEntity);
+                            await _cacheService.SetAsync<AdkuEntity>("Redis", entity);
+                            var z = await _cacheService.GetAsync<AdkuEntity>("Redis");
                         }
                         catch (RpcException ex)
                         {
+                            //складывать в резистентный кеш Redis.
                             _logger.LogError(ex, "Ошибка при отправке сущности");
                             // Логика повторной отправки сущности
                         }

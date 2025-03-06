@@ -2,12 +2,17 @@ using gRPC_Sender.Interceptor;
 using gRPC_Sender.Interceptor.gRPC_Sender.Service;
 using gRPC_Sender.Job;
 using gRPC_Sender.Mapper;
+using gRPC_Sender.Redis;
 using gRPC_Sender.Repository;
 using gRPC_Sender.Service;
 using gRPC_Sender.Service.gRPC_Sender.Service;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using Quartz;
+using StackExchange.Redis;
 using System.Text;
 
 namespace gRPC_Sender
@@ -20,6 +25,7 @@ namespace gRPC_Sender
             builder.Services.AddAutoMapper(typeof(EntityMappingProfile));
             builder.Services.AddSingleton<IDataReader>(new DataReader("your_connection_string"));
             builder.Services.AddSingleton<IEntityReader,EntityReader>();
+            builder.Services.AddSingleton<ICacheService, CacheService>();
             builder.Services.AddSingleton<SenderService>();
             // Регистрация интерсептора
             builder.Services.AddSingleton<LoggingInterceptor>();
@@ -51,8 +57,31 @@ namespace gRPC_Sender
                     };
                 });
 
-
+            //Подключение Redis через IDistributedCache
             builder.Services.AddSingleton<IJob, EntityReaderJob>();
+
+
+            // Добавляем Redis как реализацию IDistributedCache
+            var redisSettingsSection = builder.Configuration.GetSection("Redis");
+            // Добавление конечных точек
+
+            builder.Services.AddStackExchangeRedisCache(options =>
+            {
+                var configOptions = new ConfigurationOptions
+                {
+                    //EndPoints=$"{redisSettingsSection.GetValue<string>("Password")}",//{ "localhost:6379" },
+                    Password = redisSettingsSection.GetValue<string>("Password"),
+                    Ssl = redisSettingsSection.GetValue<bool>("Ssl"),
+                    AbortOnConnectFail = redisSettingsSection.GetValue<bool>("AbortOnConnectFail")
+                };
+                // Добавляем правильные EndPoints
+                var host = redisSettingsSection.GetValue<string>("Host");
+                var port = redisSettingsSection.GetValue<int>("Port");
+
+                configOptions.EndPoints.Add(host, port);
+                options.ConfigurationOptions = configOptions;
+                options.InstanceName = "MyRedisCache"; // Префикс для ключей
+            });
             // Настройка Quartz.NET
             /*            builder.Services.AddQuartz(q =>
                         {
@@ -73,7 +102,7 @@ namespace gRPC_Sender
 
                 // Определение и регистрация задачи (Job)
                 var jobKey = new JobKey("EntityReaderJob");
-                q.AddJob<EntityReaderJob>(opts => opts.WithIdentity(jobKey));
+                q.AddJob<IJob>(opts => opts.WithIdentity(jobKey));
 
                 // Определение триггера, который запускает задачу каждые 10 секунд
                 q.AddTrigger(opts => opts

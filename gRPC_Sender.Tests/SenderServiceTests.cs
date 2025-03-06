@@ -2,6 +2,7 @@
 using Grpc.Core;
 using gRPC_Sender.Entity;
 using gRPC_Sender.Mapper;
+using gRPC_Sender.Redis;
 using gRPC_Sender.Service;
 using GrpcServices;
 using Microsoft.Extensions.Logging;
@@ -44,9 +45,10 @@ namespace gRPC_Sender.Tests
             //_entityReaderMock = new Mock<EntityReader>(MockBehavior.Strict, new object[] { null! });
 
             var entityReaderMock = new Mock<IEntityReader>();
+            var сacheService = new Mock<ICacheService>();
             entityReaderMock.Setup(x => x.GetReader()).Returns(channel.Reader);
 
-            _senderService = new SenderService(_loggerMock.Object, entityReaderMock.Object, _mapper);
+            _senderService = new SenderService(_loggerMock.Object, entityReaderMock.Object, _mapper, сacheService.Object);
         }
         [Fact]
         public async Task StreamEntities_SendsMappedEntities()
